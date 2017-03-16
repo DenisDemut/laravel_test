@@ -1,0 +1,57 @@
+
+RewriteEngine On
+
+RewriteBase /public
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteCond /public/%{REQUEST_URI} -d
+RewriteCond %{REQUEST_URI} !(.*)/$
+RewriteRule ^(.*)$ /public/$1/
+
+RewriteBase /public
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /public/$1
+
+RewriteBase /
+RewriteRule ^(/)?$ /public/index.php [L]
+RewriteCond %{HTTP:Accept-Language} ^ua [NC] // browser language German
+# Disable index view
+Options -Indexes
+
+# Hide a specific file
+<Files .env>
+    Order allow,deny
+    Deny from all
+</Files>
+<Files "deploy*.php">
+   SetHandler application/x-httpd-php
+</Files>
+AddDefaultCharset utf-8
+### Способ #2
+### Подсказать браузеру схему кеширования через заголовки в ответе сервера
+<IfModule mod_expires.c>
+    # Enable expires
+    ExpiresActive On
+    
+    # Default a cache expiration
+    ExpiresDefault "access plus 10 month"
+    
+    # Images
+    ExpiresByType image/gif                 "access plus 1 month"
+    ExpiresByType image/png                 "access plus 1 month"
+    ExpiresByType image/jpg                 "access plus 1 month"
+    ExpiresByType image/jpeg                "access plus 1 month"
+    
+    # CSS, JavaScript
+    ExpiresByType text/css                  "access plus 1 year"
+    ExpiresByType application/javascript    "access plus 1 year"
+    ExpiresByType text/javascript           "access plus 1 year"
+</IfModule>
+
+
+### Удалить заголовок ETag (иначе есть проблемы с кешированием при включенном сжатии)
+<IfModule mod_headers.c>
+    Header unset ETag
+</IfModule>
+FileETag None
